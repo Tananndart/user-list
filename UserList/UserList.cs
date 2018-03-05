@@ -5,7 +5,8 @@ using System.Collections.Generic;
 namespace UserList
 {
     // TODO : need unit tests
-    public class UserList<T> : IList<T>
+    public class UserList<T> : IList<T>, ICollection<T>, IEnumerable<T>,
+        IEnumerable//, IList, ICollection, IReadOnlyList<T>, IReadOnlyCollection<T>
     {
         private T[] _array;
         private int _count;
@@ -203,62 +204,15 @@ namespace UserList
 
         public IEnumerator<T> GetEnumerator()
         {
-            return new Enumerator(this);
+            for (int i = 0; i < _count; ++i)
+            {
+                yield return _array[i];
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return new Enumerator(this);
-        }
-
-        // TODO: use yield ?
-        public struct Enumerator : IEnumerator<T>, System.Collections.IEnumerator
-        {
-            private UserList<T> _list;
-            private int _index;
-            private T _current;
-
-            internal Enumerator(UserList<T> list)
-            {
-                _list = list;
-                _index = 0;
-                _current = default(T);
-            }
-
-            public T Current => _current;
-
-            object IEnumerator.Current
-            {
-                get
-                {
-                    if (_index == 0 || _index >= _list._count)
-                        throw new InvalidOperationException(nameof(Current));
-
-                    return Current;
-                }
-            }
-
-            public void Dispose() {}
-
-            public bool MoveNext()
-            {
-                if (_index < _list._count)
-                {
-                    _current = _list._array[_index];
-                    _index += 1;
-                    return true;
-                }
-
-                _index = _list._count;
-                _current = default(T);
-                return false;
-            }
-
-            public void Reset()
-            {
-                _index = 0;
-                _current = default(T);
-            }
+            return GetEnumerator();
         }
     }
 }
