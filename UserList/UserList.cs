@@ -5,8 +5,8 @@ using System.Collections.Generic;
 namespace UserList
 {
     // TODO : need unit tests
-    public class UserList<T> : IList<T>, ICollection<T>, IEnumerable<T>,
-        IEnumerable//, IList, ICollection, IReadOnlyList<T>, IReadOnlyCollection<T>
+    public class UserList<T> : IList<T>, ICollection<T>, IEnumerable<T>, IReadOnlyList<T>, IReadOnlyCollection<T>,
+        IEnumerable, IList, ICollection
     {
         private T[] _array;
         private int _count;
@@ -81,8 +81,17 @@ namespace UserList
 
         private int LastIndex => _count - 1;
 
-        // TODO : no impl 
-        public bool IsReadOnly => throw new NotImplementedException();
+        bool ICollection<T>.IsReadOnly => false;
+
+        bool IList.IsReadOnly => throw new NotImplementedException();
+
+        bool IList.IsFixedSize => throw new NotImplementedException();
+
+        object ICollection.SyncRoot => throw new NotImplementedException();
+
+        bool ICollection.IsSynchronized => throw new NotImplementedException();
+
+        object IList.this[int index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         // operators
         public T this[int index]
@@ -123,10 +132,28 @@ namespace UserList
             _count += 1;
         }
 
+        int IList.Add(object value)
+        {
+            throw new NotImplementedException();
+        }
+
         public void Clear()
         {
             Array.Clear(_array, 0, _count);
             _count = 0;
+        }
+
+        public void RemoveAt(int index)
+        {
+            if (index >= _count)
+                throw new ArgumentOutOfRangeException(nameof(index));
+
+            if (index < LastIndex)
+                Array.Copy(_array, index + 1, _array, index, LastIndex - index);
+
+            _array[LastIndex] = default(T);
+
+            _count -= 1;
         }
 
         public bool Remove(T item)
@@ -143,12 +170,22 @@ namespace UserList
             return true;
         }
 
+        void IList.Remove(object value)
+        {
+            throw new NotImplementedException();
+        }
+
         public int IndexOf(T item)
         {
             if (_count == 0)
                 return -1;
 
             return Array.IndexOf(_array, item, 0, LastIndex);
+        }
+
+        int IList.IndexOf(object value)
+        {
+            throw new NotImplementedException();
         }
 
         public void Insert(int index, T item)
@@ -163,21 +200,14 @@ namespace UserList
 
             _array[index] = item;
             _count += 1;
-
         }
 
-        public void RemoveAt(int index)
+        void IList.Insert(int index, object value)
         {
-            if (index >= _count)
-                throw new ArgumentOutOfRangeException(nameof(index));
-
-            if (index < LastIndex)
-                Array.Copy(_array, index + 1, _array, index, LastIndex - index);
-
-            _array[LastIndex] = default(T);
-
-            _count -= 1;
+            throw new NotImplementedException();
         }
+
+        
 
         public bool Contains(T item)
         {
@@ -197,9 +227,19 @@ namespace UserList
             return false;
         }
 
+        bool IList.Contains(object value)
+        {
+            throw new NotImplementedException();
+        }
+
         public void CopyTo(T[] array, int arrayIndex)
         {
             Array.Copy(_array, 0, array, arrayIndex, _count);
+        }
+
+        void ICollection.CopyTo(Array array, int index)
+        {
+            throw new NotImplementedException();
         }
 
         public IEnumerator<T> GetEnumerator()
