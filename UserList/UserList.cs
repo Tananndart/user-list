@@ -5,6 +5,7 @@ using System.Collections.Generic;
 namespace UserList
 {
     // TODO : need unit tests
+    // TODO : upgrade exception messages
     public class UserList<T> : IList<T>, ICollection<T>, IEnumerable<T>, IReadOnlyList<T>, IReadOnlyCollection<T>,
         IEnumerable, IList, ICollection
     {
@@ -83,15 +84,13 @@ namespace UserList
 
         bool ICollection<T>.IsReadOnly => false;
 
-        bool IList.IsReadOnly => throw new NotImplementedException();
+        bool IList.IsReadOnly => false;
 
-        bool IList.IsFixedSize => throw new NotImplementedException();
+        bool IList.IsFixedSize => false;
 
+        // TODO : no impl
         object ICollection.SyncRoot => throw new NotImplementedException();
-
         bool ICollection.IsSynchronized => throw new NotImplementedException();
-
-        object IList.this[int index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         // operators
         public T this[int index]
@@ -110,7 +109,25 @@ namespace UserList
                     throw new ArgumentOutOfRangeException(nameof(index));
 
                 _array[index] = value;
+            }
+        }
 
+        object IList.this[int index]
+        {
+            get => this[index];
+
+            set
+            {
+                IfNotObjectThenThrow(value);
+
+                try
+                {
+                    this[index] = (T)value;
+                }
+                catch (InvalidCastException)
+                {
+                    throw new ArgumentException("Arg is wrong type", nameof(value));
+                }
             }
         }
 
@@ -121,6 +138,12 @@ namespace UserList
             int newSize = size <= 0 ? DEFAULT_CAPACITY : size * 2;
 
             Array.Resize(ref _array, newSize);
+        }
+
+        private void IfNotObjectThenThrow(object value)
+        {
+            if (value == null && !(default(T) == null))
+                throw new ArgumentOutOfRangeException("Value is not object!");
         }
 
         public void Add(T item)
@@ -134,7 +157,18 @@ namespace UserList
 
         int IList.Add(object value)
         {
-            throw new NotImplementedException();
+            IfNotObjectThenThrow(value);
+
+            try
+            {
+                Add((T)value);
+            }
+            catch (InvalidCastException)
+            {
+                throw new ArgumentException("Arg is wrong type", nameof(value));
+            }
+
+            return LastIndex;
         }
 
         public void Clear()
@@ -172,7 +206,16 @@ namespace UserList
 
         void IList.Remove(object value)
         {
-            throw new NotImplementedException();
+            IfNotObjectThenThrow(value);
+
+            try
+            {
+                Remove((T)value);
+            }
+            catch (InvalidCastException)
+            {
+                throw new ArgumentException("Arg is wrong type", nameof(value));
+            }
         }
 
         public int IndexOf(T item)
@@ -185,7 +228,16 @@ namespace UserList
 
         int IList.IndexOf(object value)
         {
-            throw new NotImplementedException();
+            IfNotObjectThenThrow(value);
+
+            try
+            {
+                return IndexOf((T)value);
+            }
+            catch (InvalidCastException)
+            {
+                throw new ArgumentException("Arg is wrong type", nameof(value));
+            }
         }
 
         public void Insert(int index, T item)
@@ -204,10 +256,17 @@ namespace UserList
 
         void IList.Insert(int index, object value)
         {
-            throw new NotImplementedException();
-        }
+            IfNotObjectThenThrow(value);
 
-        
+            try
+            {
+                Insert(index, (T)value);
+            }
+            catch (InvalidCastException)
+            {
+                throw new ArgumentException("Arg is wrong type", nameof(value));
+            }
+        }
 
         public bool Contains(T item)
         {
@@ -229,7 +288,16 @@ namespace UserList
 
         bool IList.Contains(object value)
         {
-            throw new NotImplementedException();
+            IfNotObjectThenThrow(value);
+
+            try
+            {
+                return Contains((T)value);
+            }
+            catch (InvalidCastException)
+            {
+                throw new ArgumentException("Arg is wrong type", nameof(value));
+            }
         }
 
         public void CopyTo(T[] array, int arrayIndex)
@@ -239,7 +307,17 @@ namespace UserList
 
         void ICollection.CopyTo(Array array, int index)
         {
-            throw new NotImplementedException();
+            if ((array != null) && (array.Rank != 1))
+                throw new ArgumentException("Multy rank array not upported");
+
+            try
+            {
+                Array.Copy(_array, 0, array, index, _count);
+            }
+            catch (ArrayTypeMismatchException)
+            {
+                throw new ArgumentException("Invalid array type");
+            }
         }
 
         public IEnumerator<T> GetEnumerator()
