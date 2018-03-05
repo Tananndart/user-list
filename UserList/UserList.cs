@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-
 
 namespace UserList
 {
@@ -26,32 +24,26 @@ namespace UserList
             if (enumerable == null)
                 throw new ArgumentNullException(nameof(enumerable));
 
-            // TODO : rewrite without enumerable.Count()!
-            int elementCount = enumerable.Count();
-            if (elementCount <= 0)
+            if (enumerable is ICollection<T> collection)
             {
-                _array = _emptyArray;
+                int elementCount = collection.Count;
+                if (elementCount <= 0)
+                {
+                    _array = _emptyArray;
+                    return;
+                }
+
+                _array = new T[elementCount];
+                collection.CopyTo(_array, 0);
+
+                _count = elementCount;
                 return;
             }
 
-            _array = new T[elementCount];
-
-            ICollection<T> collection = enumerable as ICollection<T>;
-            if (collection != null)
-            {
-                collection.CopyTo(_array, 0);
-            }
-            else
-            {
-                int i = 0;
-                foreach (T val in enumerable)
-                {
-                    _array[i] = val;
-                    ++i;
-                }
-            }
-
-            _count = elementCount;
+            _array = _emptyArray;
+            using (IEnumerator<T> en = enumerable.GetEnumerator())
+                while (en.MoveNext())
+                    Add(en.Current);
         }
 
         public UserList(int capacity)
