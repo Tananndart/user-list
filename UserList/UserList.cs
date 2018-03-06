@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace UserList
 {
     // TODO : need unit tests
-    // TODO : upgrade exception messages
     public class UserList<T> : IList<T>, ICollection<T>, IEnumerable<T>, IReadOnlyList<T>, IReadOnlyCollection<T>,
         IEnumerable, IList, ICollection
     {
@@ -51,12 +51,9 @@ namespace UserList
         public UserList(int capacity)
         {
             if (capacity < 0)
-                throw new ArgumentOutOfRangeException(nameof(capacity));
+                throw new ArgumentException(nameof(capacity));
 
-            if (capacity == 0)
-                _array = _emptyArray;
-            else
-                _array = new T[capacity];
+            _array = (capacity != 0) ? new T[capacity] : _emptyArray;
         }
 
         // properties
@@ -73,10 +70,8 @@ namespace UserList
                 if (value < size)
                     throw new ArgumentOutOfRangeException(nameof(Capacity));
 
-                if (value == size)
-                    return;
-
-                Array.Resize(ref _array, value);
+                if (value > size)
+                    Array.Resize(ref _array, value);
             }
         }
 
@@ -88,9 +83,9 @@ namespace UserList
 
         bool IList.IsFixedSize => false;
 
-        // TODO : no impl
-        object ICollection.SyncRoot => throw new NotImplementedException();
-        bool ICollection.IsSynchronized => throw new NotImplementedException();
+        object ICollection.SyncRoot => throw new NotSupportedException();
+
+        bool ICollection.IsSynchronized => false;
 
         // operators
         public T this[int index]
@@ -118,15 +113,15 @@ namespace UserList
 
             set
             {
-                IfNotObjectThenThrow(value);
+                ThrowIfNullOrDefault(value);
 
                 try
                 {
                     this[index] = (T)value;
                 }
-                catch (InvalidCastException)
+                catch (InvalidCastException ex)
                 {
-                    throw new ArgumentException("Arg is wrong type", nameof(value));
+                    throw new ArgumentException($"{nameof(value)} HAS a wrong type", ex);
                 }
             }
         }
@@ -140,10 +135,10 @@ namespace UserList
             Array.Resize(ref _array, newSize);
         }
 
-        private void IfNotObjectThenThrow(object value)
+        private void ThrowIfNullOrDefault(object value)
         {
-            if (value == null && !(default(T) == null))
-                throw new ArgumentOutOfRangeException("Value is not object!");
+            if (this.IsNullAndDefaultNotNullable(value))
+                throw new ArgumentException($"{nameof(value)} IS null OR incorrect type");
         }
 
         public void Add(T item)
@@ -157,15 +152,15 @@ namespace UserList
 
         int IList.Add(object value)
         {
-            IfNotObjectThenThrow(value);
+            ThrowIfNullOrDefault(value);
 
             try
             {
                 Add((T)value);
             }
-            catch (InvalidCastException)
+            catch (InvalidCastException ex)
             {
-                throw new ArgumentException("Arg is wrong type", nameof(value));
+                throw new ArgumentException($"{nameof(value)} HAS a wrong type", ex);
             }
 
             return LastIndex;
@@ -206,15 +201,15 @@ namespace UserList
 
         void IList.Remove(object value)
         {
-            IfNotObjectThenThrow(value);
+            ThrowIfNullOrDefault(value);
 
             try
             {
                 Remove((T)value);
             }
-            catch (InvalidCastException)
+            catch (InvalidCastException ex)
             {
-                throw new ArgumentException("Arg is wrong type", nameof(value));
+                throw new ArgumentException($"{nameof(value)} HAS a wrong type", ex);
             }
         }
 
@@ -228,15 +223,15 @@ namespace UserList
 
         int IList.IndexOf(object value)
         {
-            IfNotObjectThenThrow(value);
+            ThrowIfNullOrDefault(value);
 
             try
             {
                 return IndexOf((T)value);
             }
-            catch (InvalidCastException)
+            catch (InvalidCastException ex)
             {
-                throw new ArgumentException("Arg is wrong type", nameof(value));
+                throw new ArgumentException($"{nameof(value)} HAS a wrong type", ex);
             }
         }
 
@@ -256,47 +251,34 @@ namespace UserList
 
         void IList.Insert(int index, object value)
         {
-            IfNotObjectThenThrow(value);
+            ThrowIfNullOrDefault(value);
 
             try
             {
                 Insert(index, (T)value);
             }
-            catch (InvalidCastException)
+            catch (InvalidCastException ex)
             {
-                throw new ArgumentException("Arg is wrong type", nameof(value));
+                throw new ArgumentException($"{nameof(value)} HAS a wrong type", ex);
             }
         }
 
         public bool Contains(T item)
         {
-            if ((Object)item == null)
-            {
-                for (int i = 0; i < _count; i++)
-                    if ((Object)_array[i] == null)
-                        return true;
-                return false;
-            }
-
-            EqualityComparer<T> c = EqualityComparer<T>.Default;
-            for (int i = 0; i < _count; i++)
-                if (c.Equals(_array[i], item))
-                    return true;
-
-            return false;
+            return _array.Contains(item);
         }
 
         bool IList.Contains(object value)
         {
-            IfNotObjectThenThrow(value);
+            ThrowIfNullOrDefault(value);
 
             try
             {
                 return Contains((T)value);
             }
-            catch (InvalidCastException)
+            catch (InvalidCastException ex)
             {
-                throw new ArgumentException("Arg is wrong type", nameof(value));
+                throw new ArgumentException($"{nameof(value)} HAS a wrong type", ex);
             }
         }
 
@@ -314,23 +296,29 @@ namespace UserList
             {
                 Array.Copy(_array, 0, array, index, _count);
             }
-            catch (ArrayTypeMismatchException)
+            catch (ArrayTypeMismatchException ex)
             {
-                throw new ArgumentException("Invalid array type");
+                throw new ArgumentException("Invalid array type", ex);
             }
         }
 
         public IEnumerator<T> GetEnumerator()
         {
             for (int i = 0; i < _count; ++i)
-            {
                 yield return _array[i];
-            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+    }
+
+    public static class UserListExtension
+    {
+        public static bool IsNullAndDefaultNotNullable<T>(this UserList<T> list, object value)
+        {
+            return (value == null && !(default(T) == null)) ;
         }
     }
 }
