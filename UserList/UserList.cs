@@ -190,7 +190,7 @@ namespace UserList
             if (_count == 0)
                 return false;
 
-            int remIndex = Array.IndexOf(_array, item, 0, LastIndex);
+            int remIndex = Array.IndexOf(_array, item, 0, _count);
             if (remIndex < 0)
                 return false;
 
@@ -218,7 +218,7 @@ namespace UserList
             if (_count == 0)
                 return -1;
 
-            return Array.IndexOf(_array, item, 0, LastIndex);
+            return Array.IndexOf(_array, item, 0, _count);
         }
 
         int IList.IndexOf(object value)
