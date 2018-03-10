@@ -290,7 +290,7 @@ namespace UserList
         void ICollection.CopyTo(Array array, int index)
         {
             if ((array != null) && (array.Rank != 1))
-                throw new ArgumentException("Multy rank array not upported");
+                throw new ArgumentException("Multy rank array not supported");
 
             try
             {

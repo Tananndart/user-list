@@ -1,137 +1,140 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using UserList;
-
-
-/*
- * + 1. Tests from UserList<int>
- * 2. Tests from UserList<MyClass>
- * 3. Refact tests for all this
- */
 
 namespace UserListTests
 {
     [TestClass]
     public class UserListTests
     {
+        private const int TEST_CAPACITY = 100;
+
+        private const int TEST_ARRAY_LENGTH = 10;
+
+        private void CheckLengthArray<T>(T[] array)
+        {
+            if (array.Length != TEST_ARRAY_LENGTH)
+                throw new ArgumentException($"Length {nameof(array)} not equal TEST_ARRAY_LENGTH");
+        }
+
+        private int[] GetIntArray()
+        {
+            int[] array =  { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+            CheckLengthArray(array);
+
+            return array;
+        }
+
+        private string[] GetStringArray()
+        {
+            string[] array = { "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine" };
+            CheckLengthArray(array);
+
+            return array;
+        }
+
+        private TestObject[] GetTestObjectArray()
+        {
+            TestObject[] objects = new TestObject[TEST_ARRAY_LENGTH];
+
+            for (int i = 0; i < TEST_ARRAY_LENGTH; ++i)
+                objects[i] = new TestObject(i);
+
+            return objects;
+        }
+
         [TestMethod]
         public void Construct_WithCollection_ShouldEqualsItems()
         {
-            int[] array = { 0, 1, 2, 3, 4, 5 };
-
-            UserList<int> list = new UserList<int>(array); 
-
-            Assert.AreEqual(list.Count, array.Length);
-            for (int i = 0; i < list.Count; ++i)
-                Assert.AreEqual(list[i], array[i]);
+            GenericTests.Construct_WithCollection_ShouldEqualsItems(GetIntArray());
+            GenericTests.Construct_WithCollection_ShouldEqualsItems(GetStringArray());
+            GenericTests.Construct_WithCollection_ShouldEqualsItems(GetTestObjectArray());
         }
 
         [TestMethod]
         public void Construct_WithEnumerable_ShouldValid()
         {
-            Assert.Fail();
+            GenericTests.Construct_WithEnumerable_ShouldValid(GetIntArray());
+            GenericTests.Construct_WithEnumerable_ShouldValid(GetStringArray());
+            GenericTests.Construct_WithEnumerable_ShouldValid(GetTestObjectArray());
         }
 
         [TestMethod]
         public void Construct_WithCapacity_ShouldValid()
         {
-            const int CAPACITY = 500;
-
-            UserList<int> list = new UserList<int>(CAPACITY);
-
-            Assert.AreEqual(list.Capacity, CAPACITY);
+            GenericTests.Construct_WithCapacity_ShouldValid<int>(TEST_CAPACITY);
+            GenericTests.Construct_WithCapacity_ShouldValid<TestObject>(TEST_CAPACITY);
         }
 
         [TestMethod]
         public void SetCapacity_ShouldSaveItems()
         {
-            const int CAPACITY = 500;
-            int[] array = { 0, 1, 2, 3, 4, 5 };
-
-            UserList<int> list = new UserList<int>(array)
-            {
-                Capacity = CAPACITY
-            };
-
-            Assert.AreEqual(list.Count, array.Length);
-            Assert.AreEqual(list.Capacity, CAPACITY);
+            GenericTests.SetCapacity_ShouldSaveItems(GetIntArray(), TEST_CAPACITY);
+            GenericTests.SetCapacity_ShouldSaveItems(GetStringArray(), TEST_CAPACITY);
+            GenericTests.SetCapacity_ShouldSaveItems(GetTestObjectArray(), TEST_CAPACITY);
         }
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentOutOfRangeException))]
         public void Indexator_ShouldThrowArgumentOutOfRange()
         {
-            UserList<int> list = new UserList<int> { 0, 1, 2, 3, 4, 5 };
-
-            list[list.Count] = list.Count;
+            GenericTests.Indexator_ShouldThrowArgumentOutOfRange(GetIntArray());
         }
 
         [TestMethod]
         public void Add_ShouldAddItem()
         {
-            const int N = 10;
-            
-            UserList<int> list = new UserList<int>();
-            for (int i = 0; i < N; ++i)
-                list.Add(i);
-
-            Assert.AreEqual(list.Count, N);
-            for (int i = 0; i < N; ++i)
-                Assert.AreEqual(list[i], i);
+            GenericTests.Add_ShouldAddItem(GetIntArray());
+            GenericTests.Add_ShouldAddItem(GetStringArray());
+            GenericTests.Add_ShouldAddItem(GetTestObjectArray());
         }
 
         [TestMethod]
         public void Clear_ShouldRemoveAllItems()
         {
-            UserList<int> list = new UserList<int> { 0, 1, 2, 3, 4, 5 };
-
-            list.Clear();
-
-            Assert.AreEqual(list.Count, 0);
+            GenericTests.Clear_ShouldRemoveAllItems(GetIntArray());
+            GenericTests.Clear_ShouldRemoveAllItems(GetStringArray());
+            GenericTests.Clear_ShouldRemoveAllItems(GetTestObjectArray());
         }
 
         [TestMethod]
         public void Remove_ByIndex_ShouldRemoveItem()
         {
-            UserList<int> list = new UserList<int> { 0, 1, 2, 3, 4, 5 };
-            int origin_list_count = list.Count;
+            int[] indexes =  { 2, 3, 5, 1 };
 
-            const int N = 4;
-            for (int i = 0; i < N; ++i)
-                list.RemoveAt(2);
-
-            Assert.AreEqual(list.Count, origin_list_count - N);
-            Assert.AreEqual(list[list.Count - 1], 1);
+            GenericTests.Remove_ByIndex_ShouldRemoveItem(GetIntArray(), indexes);
+            GenericTests.Remove_ByIndex_ShouldRemoveItem(GetStringArray(), indexes);
+            GenericTests.Remove_ByIndex_ShouldRemoveItem(GetTestObjectArray(), indexes);
         }
 
         [TestMethod]
         public void Remove_ByItem_ShouldRemoveItem()
         {
-            UserList<int> list = new UserList<int> { 0, 1, 2, 3, 4, 5 };
-            int origin_list_count = list.Count;
+            int[] intArray = GetIntArray();
+            int[] intRemoveItems = { intArray[3], intArray[6] };
 
-            var (item_1, item_2) = (3, 5);
-            Assert.IsTrue(list.Remove(item_1));
-            Assert.IsTrue(list.Remove(item_2));
+            string[] strArray = GetStringArray();
+            string[] strRemoveItems = { strArray[2], strArray[5] };
 
-            Assert.AreEqual(list.Count, origin_list_count - 2);
-            Assert.IsFalse(list.Contains(item_1));
-            Assert.IsFalse(list.Contains(item_2));
+            TestObject[] objArray = GetTestObjectArray();
+            TestObject[] objRemoveItems = { objArray[0], objArray[4] };
+
+            GenericTests.Remove_ByItem_ShouldRemoveItem(intArray, intRemoveItems);
+            GenericTests.Remove_ByItem_ShouldRemoveItem(strArray, strRemoveItems);
+            GenericTests.Remove_ByItem_ShouldRemoveItem(objArray, objRemoveItems);
         }
 
         [TestMethod]
-        public void Insert_ShouldInserItem()
+        public void Insert_ShouldInsertItem()
         {
-            UserList<int> list = new UserList<int> { 0, 1, 2, 3, 4, 5 };
-            int origin_list_count = list.Count;
+            int insertIndex = 3;
 
-            var (item_1, item_2) = (23, 45);
-            list.Insert(2, item_1);
-            list.Insert(4, item_2);
+            int[] intItems = { 123, 456, 768 };
+            string[] strItems = { "item_1", "item_2" };
+            TestObject[] objItems = { new TestObject(100), new TestObject(200) };
 
-            Assert.AreEqual(list.Count, origin_list_count + 2);
-            Assert.IsTrue(list.Contains(item_1));
-            Assert.IsTrue(list.Contains(item_2));
+            GenericTests.Insert_ShouldInsertItem(GetIntArray(), intItems, insertIndex);
+            GenericTests.Insert_ShouldInsertItem(GetStringArray(), strItems, insertIndex);
+            GenericTests.Insert_ShouldInsertItem(GetTestObjectArray(), objItems, insertIndex);
         }
     }
 }
