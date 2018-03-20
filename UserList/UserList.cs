@@ -5,7 +5,6 @@ using System.Linq;
 
 namespace UserList
 {
-    // TODO : need unit tests
     public class UserList<T> : IList<T>, ICollection<T>, IEnumerable<T>, IReadOnlyList<T>, IReadOnlyCollection<T>,
         IEnumerable, IList, ICollection
     {

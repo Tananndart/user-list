@@ -1,147 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using UserList;
 
 namespace UserListTests
 {
-    internal static class GenericTests
+    public class GenericTestCase<T> : IGenericTestCase
     {
-        internal static void Construct_WithCollection_ShouldEqualsItems<T>(T[] array)
-        {
-            if (array == null || array.Length <= 0)
-                throw new ArgumentException(nameof(array));
+        private T[] _array;
+        private T[] _insertItems;
+        private T[] _removeItems;
 
-            UserList<T> list = new UserList<T>(array);
+        private int _insertIndex;
+        private int[] _removeIndexes;
 
-            Assert.AreEqual(list.Count, array.Length);
-            for (int i = 0; i < list.Count; ++i)
-                Assert.AreEqual(list[i], array[i]);
-        }
+        private const int TEST_CAPACITY = 100;
 
-        internal static void Construct_WithEnumerable_ShouldValid<T>(T[] array)
-        {
-            if (array == null || array.Length <= 0)
-                throw new ArgumentException(nameof(array));
-
-            TestEnumerable<T> testEnum = new TestEnumerable<T>(array);
-
-            UserList<T> list = new UserList<T>(testEnum);
-
-            Assert.AreEqual(list.Count, testEnum.Count);
-            for (int i = 0; i < list.Count; ++i)
-                Assert.AreEqual(list[i], testEnum[i]);
-        }
-        
-        internal static void Construct_WithCapacity_ShouldValid<T>(int capacity)
-        {
-            if (capacity <= 0)
-                throw new ArgumentException(nameof(capacity));
-
-            UserList<T> list = new UserList<T>(capacity);
-
-            Assert.AreEqual(list.Capacity, capacity);
-            Assert.AreEqual(list.Count, 0);
-        }
-
-        internal static void SetCapacity_ShouldSaveItems<T>(T[] array, int capacity)
-        {
-            if (array == null || array.Length <= 0)
-                throw new ArgumentException(nameof(array));
-
-            if (capacity <= 0)
-                throw new ArgumentException(nameof(capacity));
-
-            UserList<T> list = new UserList<T>(array)
-            {
-                Capacity = capacity
-            };
-
-            Assert.AreEqual(list.Count, array.Length);
-            Assert.AreEqual(list.Capacity, capacity);
-        }
-        
-        internal static void Indexator_ShouldThrowArgumentOutOfRange<T>(T[] array)
-        {
-            if (array == null || array.Length <= 0)
-                throw new ArgumentException(nameof(array));
-
-            UserList<T> list = new UserList<T>(array);
-
-            list[list.Count] = default(T);
-        }
-        
-        internal static void Add_ShouldAddItem<T>(T[] array)
-        {
-            if (array == null || array.Length <= 0)
-                throw new ArgumentException(nameof(array));
-
-            int N = array.Length;
-
-            UserList<T> list = new UserList<T>();
-            for (int i = 0; i < N; ++i)
-                list.Add(array[i]);
-
-            Assert.AreEqual(list.Count, N);
-            for (int i = 0; i < N; ++i)
-                Assert.AreEqual(list[i], array[i]);
-        }
-
-        internal static void Clear_ShouldRemoveAllItems<T>(T[] array)
-        {
-            if (array == null || array.Length <= 0)
-                throw new ArgumentException(nameof(array));
-
-            UserList<T> list = new UserList<T>(array);
-
-            list.Clear();
-
-            Assert.AreEqual(list.Count, 0);
-        }
-        
-        internal static void Remove_ByIndex_ShouldRemoveItem<T>(T[] array, int[] removeIndexes)
-        {
-            if (array == null || array.Length <= 0)
-                throw new ArgumentException(nameof(array));
-
-            if (removeIndexes == null || removeIndexes.Length <= 0)
-                throw new ArgumentException(nameof(removeIndexes));
-
-            UserList<T> list = new UserList<T>(array);
-
-            T[] removeItems = new T[removeIndexes.Length];
-            for (int i = 0; i < removeIndexes.Length; ++i)
-            {
-                int idx = removeIndexes[i];
-
-                removeItems[i] = list[idx];
-                list.RemoveAt(idx);
-            }
-
-            Assert.AreEqual(list.Count, array.Length - removeIndexes.Length);
-            foreach (T item in removeItems)
-                Assert.IsFalse(list.Contains(item));
-        }
-        
-        internal static void Remove_ByItem_ShouldRemoveItem<T>(T[] array, T[] removeItems)
-        {
-            if (array == null || array.Length <= 0)
-                throw new ArgumentException(nameof(array));
-
-            if (removeItems == null || removeItems.Length <= 0)
-                throw new ArgumentException(nameof(removeItems));
-
-            UserList<T> list = new UserList<T>(array);
-
-            foreach (T item in removeItems)
-                Assert.IsTrue(list.Remove(item));
-
-            Assert.AreEqual(list.Count, array.Length - removeItems.Length);
-            foreach (T item in removeItems)
-                Assert.IsFalse(list.Contains(item));
-        }
-        
-        internal static void Insert_ShouldInsertItem<T>(T[] array, T[] insertItems, int idxFromInsert)
+        public GenericTestCase(T[] array, T[] insertItems, T[] removeItems, int[] removeIndexes )
         {
             if (array == null || array.Length <= 0)
                 throw new ArgumentException(nameof(array));
@@ -149,23 +23,161 @@ namespace UserListTests
             if (insertItems == null || insertItems.Length <= 0)
                 throw new ArgumentException(nameof(insertItems));
 
-            UserList<T> list = new UserList<T>(array);
+            if (removeItems == null || removeItems.Length <= 0)
+                throw new ArgumentException(nameof(removeItems));
 
-            foreach (T item in insertItems)
-                list.Insert(idxFromInsert, item);
+            _array = array;
+            _insertItems = insertItems;
+            _removeItems = removeItems;
+            _removeIndexes = removeIndexes;
 
-            Assert.AreEqual(list.Count, array.Length + insertItems.Length);
-            foreach (T item in insertItems)
+            _insertIndex = array.Length / 2;
+        }
+
+        void IGenericTestCase.Construct_WithCollection_ShouldEqualsItems()
+        {
+            // GIVEN
+            UserList<T> list = new UserList<T>(_array);
+
+            // THEN
+            Assert.AreEqual(list.Count, _array.Length);
+            for (int i = 0; i < list.Count; ++i)
+                Assert.AreEqual(list[i], _array[i]);
+        }
+
+        void IGenericTestCase.Construct_WithEnumerable_ShouldValid()
+        {
+            // GIVEN
+            TestEnumerable<T> testEnum = new TestEnumerable<T>(_array);
+
+            // WHEN
+            UserList<T> list = new UserList<T>(testEnum);
+
+            // THEN
+            Assert.AreEqual(list.Count, testEnum.Count);
+            for (int i = 0; i < list.Count; ++i)
+                Assert.AreEqual(list[i], testEnum[i]);
+        }
+        
+        void IGenericTestCase.Construct_WithCapacity_ShouldValid()
+        {
+            // GIVEN
+            UserList<T> list = new UserList<T>(TEST_CAPACITY);
+
+            // THEN
+            Assert.AreEqual(list.Capacity, TEST_CAPACITY);
+            Assert.AreEqual(list.Count, 0);
+        }
+
+        void IGenericTestCase.SetCapacity_ShouldSaveItems()
+        {
+            // GIVEN
+            UserList<T> list = new UserList<T>(_array)
+            {
+                Capacity = TEST_CAPACITY
+            };
+
+            // THEN
+            Assert.AreEqual(list.Count, _array.Length);
+            Assert.AreEqual(list.Capacity, TEST_CAPACITY);
+        }
+        
+        void IGenericTestCase.Add_ShouldAddItem()
+        {
+            // GIVEN
+            int N = _array.Length;
+            UserList<T> list = new UserList<T>();
+
+            // WHEN
+            for (int i = 0; i < N; ++i)
+                list.Add(_array[i]);
+
+            // THEN
+            Assert.AreEqual(list.Count, N);
+            for (int i = 0; i < N; ++i)
+                Assert.AreEqual(list[i], _array[i]);
+        }
+
+        void IGenericTestCase.Clear_ShouldRemoveAllItems()
+        {
+            // GIVEN
+            UserList<T> list = new UserList<T>(_array);
+
+            // WHEN
+            list.Clear();
+
+            // THEN
+            Assert.AreEqual(list.Count, 0);
+        }
+        
+        void IGenericTestCase.Remove_ByIndex_ShouldRemoveItem()
+        {
+            // GIVEN
+            UserList<T> list = new UserList<T>(_array);
+
+            // WHEN
+            T[] removeItems = new T[_removeIndexes.Length];
+            for (int i = 0; i < _removeIndexes.Length; ++i)
+            {
+                int idx = _removeIndexes[i];
+
+                removeItems[i] = list[idx];
+                list.RemoveAt(idx);
+            }
+
+            // THEN
+            Assert.AreEqual(list.Count, _array.Length - _removeIndexes.Length);
+            foreach (T item in removeItems)
+                Assert.IsFalse(list.Contains(item));
+        }
+        
+        void IGenericTestCase.Remove_ByItem_ShouldRemoveItem()
+        {
+            // GIVEN
+            UserList<T> list = new UserList<T>(_array);
+
+            // WHEN
+            foreach (T item in _removeItems)
+                Assert.IsTrue(list.Remove(item));
+
+            // THEN
+            Assert.AreEqual(list.Count, _array.Length - _removeItems.Length);
+            foreach (T item in _removeItems)
+                Assert.IsFalse(list.Contains(item));
+        }
+        
+        void IGenericTestCase.Insert_ShouldInsertItem()
+        {
+            // GIVEN
+            UserList<T> list = new UserList<T>(_array);
+
+            // WHEN
+            foreach (T item in _insertItems)
+                list.Insert(_insertIndex, item);
+
+            // THEN
+            Assert.AreEqual(list.Count, _array.Length + _insertItems.Length);
+            foreach (T item in _insertItems)
                 Assert.IsTrue(list.Contains(item));
         }
     }
 
+#pragma warning disable CS0659 // Type overrides Object.Equals(object o) but does not override Object.GetHashCode()
     internal class TestObject
+#pragma warning restore CS0659 // Type overrides Object.Equals(object o) but does not override Object.GetHashCode()
     {
         public TestObject() { }
 
         public TestObject(int val) => Value = val;
 
         public int Value { get; set; }
+
+        public override bool Equals(Object obj)
+        {
+            if (obj is TestObject testObj)
+                return Value.Equals(testObj.Value);
+
+            return false;
+        }
     }
 }
