@@ -5,6 +5,12 @@ using System.Linq;
 
 namespace UserList
 {
+    /// <summary>
+    /// Generic class UserList
+    /// Abbreviated version of the standard List.
+    /// Implement all interfaces base List, but not supported ICollection.SyncRoot.
+    /// </summary>
+    /// <typeparam name="T"> any type impl Object.Equals(obj) </typeparam>
     public class UserList<T> : IList<T>, ICollection<T>, IEnumerable<T>, IReadOnlyList<T>, IReadOnlyCollection<T>,
         IEnumerable, IList, ICollection
     {
@@ -14,12 +20,16 @@ namespace UserList
 
         private const int DEFAULT_CAPACITY = 4;
 
-        // constructors
-        public UserList()
-        {
-            _array = _emptyArray;
-        }
+        /// <summary>
+        /// Standart constructor - create empty UserList.
+        /// </summary>
+        public UserList() => _array = _emptyArray;
 
+        /// <summary>
+        /// Cunstructor by IEnumerable.
+        /// Create UserList with all elements in enumerable param.
+        /// </summary>
+        /// <param name="enumerable"> any type impl IEnumerable </param>
         public UserList(IEnumerable<T> enumerable)
         {
             if (enumerable == null)
@@ -47,6 +57,10 @@ namespace UserList
                     Add(en.Current);
         }
 
+        /// <summary>
+        /// Constructor with initial capacity.
+        /// </summary>
+        /// <param name="capacity">number of reserved items</param>
         public UserList(int capacity)
         {
             if (capacity < 0)
@@ -55,9 +69,14 @@ namespace UserList
             _array = (capacity != 0) ? new T[capacity] : _emptyArray;
         }
 
-        // properties
+        /// <summary>
+        /// Return count elements
+        /// </summary>
         public int Count => _count;
 
+        /// <summary>
+        /// Return or set capacity.
+        /// </summary>
         public int Capacity
         {
             get => _array.Length;
@@ -82,11 +101,13 @@ namespace UserList
 
         bool IList.IsFixedSize => false;
 
+        /// <summary>
+        /// While not supported!
+        /// </summary>
         object ICollection.SyncRoot => throw new NotSupportedException();
 
         bool ICollection.IsSynchronized => false;
 
-        // operators
         public T this[int index]
         {
             get
@@ -125,7 +146,6 @@ namespace UserList
             }
         }
 
-        // methods
         private void ExtendArray()
         {
             int size = _array.Length;
@@ -140,6 +160,10 @@ namespace UserList
                 throw new ArgumentException($"{nameof(value)} IS null OR incorrect type");
         }
 
+        /// <summary>
+        /// Add new element to the end
+        /// </summary>
+        /// <param name="item">new element</param>
         public void Add(T item)
         {
             if (_array.Length <= _count)
@@ -149,6 +173,11 @@ namespace UserList
             _count += 1;
         }
 
+        /// <summary>
+        /// Add new element to the end
+        /// </summary>
+        /// <param name="value">new element</param>
+        /// <returns>index from new element</returns>
         int IList.Add(object value)
         {
             ThrowIfNullOrDefault(value);
@@ -165,12 +194,19 @@ namespace UserList
             return LastIndex;
         }
 
+        /// <summary>
+        /// Clear all elements
+        /// </summary>
         public void Clear()
         {
             Array.Clear(_array, 0, _count);
             _count = 0;
         }
 
+        /// <summary>
+        /// Remove element by index
+        /// </summary>
+        /// <param name="index">index from remove</param>
         public void RemoveAt(int index)
         {
             if (index >= _count)
@@ -184,6 +220,11 @@ namespace UserList
             _count -= 1;
         }
 
+        /// <summary>
+        /// Remove element
+        /// </summary>
+        /// <param name="item">element</param>
+        /// <returns>true if the element was removed</returns>
         public bool Remove(T item)
         {
             if (_count == 0)
@@ -198,6 +239,10 @@ namespace UserList
             return true;
         }
 
+        /// <summary>
+        /// Remove element
+        /// </summary>
+        /// <param name="value">element from remove</param>
         void IList.Remove(object value)
         {
             ThrowIfNullOrDefault(value);
@@ -212,6 +257,11 @@ namespace UserList
             }
         }
 
+        /// <summary>
+        /// Searches for the element and returns the index of its first occurrence in array
+        /// </summary>
+        /// <param name="item">element from search</param>
+        /// <returns>index of the found element</returns>
         public int IndexOf(T item)
         {
             if (_count == 0)
@@ -220,6 +270,11 @@ namespace UserList
             return Array.IndexOf(_array, item, 0, _count);
         }
 
+        /// <summary>
+        /// Searches for the element and returns the index of its first occurrence in array
+        /// </summary>
+        /// <param name="value">element from search</param>
+        /// <returns>index of the found element</returns>
         int IList.IndexOf(object value)
         {
             ThrowIfNullOrDefault(value);
@@ -234,6 +289,11 @@ namespace UserList
             }
         }
 
+        /// <summary>
+        /// Insert a new element in the specified position
+        /// </summary>
+        /// <param name="index">pos from insert</param>
+        /// <param name="item">new element</param>
         public void Insert(int index, T item)
         {
             if (index >= _count)
@@ -248,6 +308,11 @@ namespace UserList
             _count += 1;
         }
 
+        /// <summary>
+        /// Insert a new element in the specified position
+        /// </summary>
+        /// <param name="index">pos from insert</param>
+        /// <param name="value">new element</param>
         void IList.Insert(int index, object value)
         {
             ThrowIfNullOrDefault(value);
@@ -262,11 +327,21 @@ namespace UserList
             }
         }
 
+        /// <summary>
+        /// Specifies whether the collection contains the specified element
+        /// </summary>
+        /// <param name="item">element from checking</param>
+        /// <returns>true if list contains item</returns>
         public bool Contains(T item)
         {
             return _array.Contains(item);
         }
 
+        /// <summary>
+        /// Specifies whether the collection contains the specified element
+        /// </summary>
+        /// <param name="value">element from checking</param>
+        /// <returns>true if list contains value</returns>
         bool IList.Contains(object value)
         {
             ThrowIfNullOrDefault(value);
@@ -281,11 +356,21 @@ namespace UserList
             }
         }
 
+        /// <summary>
+        /// Copy elements in specified array
+        /// </summary>
+        /// <param name="array">array to copy</param>
+        /// <param name="arrayIndex">array index from start insertion</param>
         public void CopyTo(T[] array, int arrayIndex)
         {
             Array.Copy(_array, 0, array, arrayIndex, _count);
         }
 
+        /// <summary>
+        /// Copy elements in specified array
+        /// </summary>
+        /// <param name="array">array to copy</param>
+        /// <param name="index">array index from start insertion</param>
         void ICollection.CopyTo(Array array, int index)
         {
             if ((array != null) && (array.Rank != 1))
@@ -313,8 +398,19 @@ namespace UserList
         }
     }
 
+    /// <summary>
+    /// Extension from UserList.
+    /// Contains additional methods for validating values.
+    /// </summary>
     public static class UserListExtension
     {
+        /// <summary>
+        /// Check value from null and check default value equals null.
+        /// </summary>
+        /// <typeparam name="T">type list items</typeparam>
+        /// <param name="list">UsertList object</param>
+        /// <param name="value">value from checking</param>
+        /// <returns></returns>
         public static bool IsNullAndDefaultNotNullable<T>(this UserList<T> list, object value)
         {
             return (value == null && !(default(T) == null)) ;
